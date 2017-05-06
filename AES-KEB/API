@@ -1,0 +1,13 @@
+Structures: bitArray [8] -> for_all a in bitArray : a = {0,1}. Implements: Xor, ToHex, ToDec
+			Word [4] -> for_all a in word : a is bitArray. Implements : PrintHex, GetIndex, Shift. Column word representation of word AES
+			words [4* 11] -> KE routine data structure -> for_all a in words : a is word. Implements : getIndex
+
+			2dim array [16*16] -> bitArray[4] 
+
+Subroutines: Rot : word -> word
+			 Sub : word + SBox -> word
+			 Xor : word + word -> word\
+			 SBoxConcat -> bitArray[4] + bitArray[4] -> bitArray[8]
+
+Subsomething: 
+			SBox; SBBox
