@@ -37,7 +37,7 @@ Sbox = (
 
 class BitArray(object) :
     def __init__(self, ba):
-        self.bitarray = ba
+        self.bitarray = bitarray(ba)
     def toHex(self):
         mult = 1
         temp = 0
@@ -46,7 +46,7 @@ class BitArray(object) :
             temp = temp + self.bitarray[i] * mult
             mult = mult * 2
         if (temp > 9):
-            result = result + chr(ord('a') +(temp - 10))
+            result = result + chr(ord('A') +(temp - 10))
         else :
             result = result + chr(ord('0') + (temp))
         mult = 1
@@ -55,7 +55,7 @@ class BitArray(object) :
             temp = temp + self.bitarray[i] * mult
             mult = mult * 2
         if (temp > 9):
-            result = result + chr(ord('a') +(temp - 10))
+            result = result + chr(ord('A') +(temp - 10))
         else :
             result = result + chr(ord('0') + (temp))
         return result
@@ -71,13 +71,14 @@ class Word(object):
         self.s.append(arg[2])
         self.s.append(arg[3])
     def toHex(self):
-        return self.s[0].toHex() + self.s[1].toHex() +
-self.s[2].toHex()+ self.s[3].toHex()
+        return BitArray(self.s[0]).toHex() +
+BitArray(self.s[1]).toHex() +BitArray(self.s[2]).toHex()
++BitArray(self.s[3]).toHex()
     def getIndex(self, index):
         if (index < 4):
             return self.s[index]
     def shift(self):
-        return Word([self.s[3], self.s[0], self.s[1], self.s[2]])
+        return Word([self.s[1], self.s[2], self.s[3], self.s[0]])
     def xor(self, w2):
         return Word(self.s[0].xor(w2.s[0]), self.s[1].xor(w2.s[1]),
 self.s[2].xor(w2.s[2]), self.s[3].xor(w2.s[3]))
@@ -94,20 +95,38 @@ class Words(object):
             return self.w[index]
 
 class SBox(object):
-    def __init__(self, arg):
+    def __init__(self, arg, Sbox):
         row = 16
         self.matrix = [[0 for x in range(row)] for y in range(row)]
         if (arg):
             for i in Sbox:
-                self.matrix[i/16][(i%16)] = Sbox[i]
+                a = (bin(Sbox[i])[2::])
+                r2 = (8 - (len(a) % 8)) %8
+                self.matrix[i/16][(i%16)] = '0' * r2 + a
     def getIndex(self, index1,index2):
         if (index1 < 16 & index2 < 16):
-            return self.matrix[index1][index2]
+            return (self.matrix[index1][index2])
     def getIndexHex(self, index1, index2):
-        getIndex(int(index1,16), int(index2,16))
+        index1 = int(index1,16)
+        index2 = int(index2,16)
+        return (self.matrix[index1][index2])
     def replace(self, ba):
         address = ba.toHex()
-        return getIndexHex(address[0],address[1])
+        a1 =  bitarray(self.getIndexHex(str(address[0]),str(address[1])))
+        a2 =  bitarray(self.getIndexHex(str(address[2]),str(address[3])))
+        a3 =  bitarray(self.getIndexHex(str(address[4]),str(address[5])))
+        a4 =  bitarray(self.getIndexHex(str(address[6]),str(address[7])))
+        lst = [a1,a2,a3,a4]
+        w = Word(lst)
+        return Word(lst)
+
+def ToBin(a):
+    r =  bin(int(a,16))[2::]
+    r2 = 4 - (len(r) % 4)
+    return '0' * r2 + r
+
+def ToBA(a):
+    return [(bitarray(a[0:8])),(bitarray(a[8:16])),(bitarray(a[16:24])),(bitarray(a[24:32]))]
 
 def Rot(w1):
     return w1.shift()
@@ -117,3 +136,27 @@ def SubBox(word, sbox):
 
 def Xor(w1,w2):
     return w1.xor(w2)
+
+def shiftRight(ba):
+    temp = ba[0]
+    for i in range(8):
+        ba[0] = ba[1]
+    ba[7] = temp
+
+def XorRCon(w1, round):
+    ba = bitarray('00000001')
+    ba = shiftRight(ba,round)
+    ba0 = binarray('00000000')
+    w  = Word([ba, ba0, ba0, ba0])
+    return w1.xor(w)
+
+def test():
+    w1 = '09CF4F3C'
+    w1 = ToBin(w1)
+    b1 = Word(ToBA(w1))
+    print(b1.toHex())
+    b2 = Rot(b1)
+    a = SBox(1,Sbox)
+    a = SubBox(b2, a)
+    print(a.toHex())
+test()
